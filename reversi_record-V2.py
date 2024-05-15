@@ -22,11 +22,13 @@ service = Service(executable_path='./chromedriver.exe')
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
 # 用戶名單
-usernames = ["formosa_slosi", "tetratio", "y86n2qc9dt", "takotime", "beagle529", "manymao", "yango_chen",
-             "cgc", "afriedfish", "liaod", "cloud_strife", "diat", "chocobotang", "zeropower", "konran",
-             "zoehuang","hilda1080","pinsi","alan1014","kmwei","victor0117","larryxo","quantina","paula2058",
-             "oscar12346","xxcco1111","weiweili","chessraider","rody0803","cpho","phy202008","kumi824","kueichen",
-             "ray0715","thomas0422","claire123456789","lonely1009","cgc003"]
+usernames = [
+    "formosa_slosi", "tetratio", "y86n2qc9dt", "takotime", "beagle529", "manymao", "cgc", "afriedfish", "yangochen",
+    "diat", "liaod", "cloudstrife", "chocobotang", "konran", "zeropower", "hilda1080", "zoehuang", "0524ouo", "cgc003",
+    "pinsi", "chessraider", "alan1014", "victor0117", "kmwei", "weiweili", "larryxo", "quantina", "oscar12346", "rody0803",
+    "xxcco1111", "ji3ji3ji3ji3", "pinkjackjack44", "cpho", "claire123456789", "phy202008", "thomas0422", "yorklin1102", "kumi824",
+    "kueichen", "ray0715", "lonely1009", "wadel0407"
+]
 
 # 棋類型和相對應的網址
 game_types = {
@@ -34,8 +36,8 @@ game_types = {
     "1min": "http://questgames.net/reversi1/#user/"
 }
 
-# 獲取今天的日期，格式為 YYYYMMDD
-today = datetime.now().strftime("%Y%m%d")
+# 獲取當前的日期和時間，格式為 YYYYMMDDHHMM
+current_time = datetime.now().strftime("%Y%m%d%H%M")
 
 # 處理每種棋類型
 for game_type, url_prefix in game_types.items():
@@ -46,7 +48,7 @@ for game_type, url_prefix in game_types.items():
         success = False
         while attempts < 2 and not success:
             driver.get(f"{url_prefix}{username}")
-            time.sleep(1.5)  # 等待內容加載
+            time.sleep(0.8)  # 等待內容加載
             try:
                 user_element = driver.find_element(By.CSS_SELECTOR, 'li.record')
                 rank = user_element.find_element(By.XPATH, './table/tbody/tr[th[text()="Rank"]]/td').text.strip()
@@ -66,8 +68,8 @@ for game_type, url_prefix in game_types.items():
     df = pd.DataFrame(data)
     # 按 'Rank' 升序排列 DataFrame
     df = df.sort_values(by='Rank')
-    # 將 DataFrame 儲存到 Excel 文件，文件名包含當天日期
-    excel_filename = f'Reversi_{game_type}_data_{today}.xlsx'
+    # 將 DataFrame 儲存到 Excel 文件，文件名包含當前日期和時間
+    excel_filename = f'Reversi_{game_type}_data_{current_time}.xlsx'
     df.to_excel(excel_filename, index=False)
     print(f"數據已儲存至 {excel_filename} 並按排名排序。")
 
