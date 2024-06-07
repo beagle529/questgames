@@ -2,31 +2,40 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from tqdm import tqdm  # 引入 tqdm 來顯示進度條
+from tqdm import tqdm
 import pandas as pd
 import time
-from datetime import datetime  # 引入 datetime 來處理日期
-import os  # 引入 os 來處理文件路徑
+from datetime import datetime
+import os
+import atexit
 
 # 設定 Selenium 的 Chrome 驅動
 chrome_options = Options()
 chrome_options.add_argument("--headless")  # 啟用無頭模式
-chrome_options.add_argument("--disable-gpu")  # 禁用GPU硬件加速
+chrome_options.add_argument("--disable-gpu")  # 禁用GPU硬體加速
 chrome_options.add_argument("--log-level=3")  # 只記錄嚴重錯誤信息
-chrome_options.add_argument("--disable-dev-shm-usage")  # 避免大量內存佔用
+chrome_options.add_argument("--disable-dev-shm-usage")  # 避免大量記憶體佔用
 chrome_options.add_argument("--no-sandbox")  # 解決DevToolsActivePort文件不存在的錯誤
 
 # 指定 Chromedriver 的路徑
-service = Service(executable_path='./chromedriver.exe')
+service = Service(executable_path='e:\\temp\\chromedriver.exe')
 
-# 初始化 webdriver
+# 初始化 WebDriver
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
+# 確保在腳本結束時釋放資源
+def cleanup():
+    driver.quit()
+    service.stop()
+
+# 使用 atexit 模組來註冊 cleanup 函數，確保即使腳本異常退出時也能釋放資源
+atexit.register(cleanup)
+
 # 從 user.txt 文件中讀取用戶名單，轉為小寫並移除空白
-with open('./othello/user.txt', 'r') as file:
+with open('e:\\temp\\othello\\user.txt', 'r') as file:
     usernames = [line.strip().replace(' ', '').lower() for line in file.readlines()]
 
-# 棋類型和相對應的網址
+# 棋類型和對應的網址
 game_types = {
     "5min": "http://questgames.net/reversi/#user/",
     "1min": "http://questgames.net/reversi1/#user/"
@@ -35,9 +44,9 @@ game_types = {
 # 獲取當前的日期和時間，格式為 YYYYMMDDHHMM
 current_time = datetime.now().strftime("%Y%m%d%H%M")
 
-# 確保當前目錄的子目錄 files 存在
-if not os.path.exists('./othello/files'):
-    os.makedirs('./othello/files')
+# 確保文件存儲目錄存在
+if not os.path.exists('e:\\temp\\othello\\files'):
+    os.makedirs('e:\\temp\\othello\\files')
 
 # 處理每種棋類型
 for game_type, url_prefix in game_types.items():
@@ -69,9 +78,9 @@ for game_type, url_prefix in game_types.items():
     # 按 'Rank' 升序排列 DataFrame
     df = df.sort_values(by='Rank')
     # 將 DataFrame 儲存到 Excel 文件，文件名包含當前日期和時間
-    excel_filename = f'./othello/files/Reversi_{game_type}_data_{current_time}.xlsx'
+    excel_filename = f'e:\\temp\\othello\\files\\Reversi_{game_type}_data_{current_time}.xlsx'
     df.to_excel(excel_filename, index=False)
     print(f"數據已儲存至 {excel_filename} 並按排名排序。")
 
-# 關閉瀏覽器
-driver.quit()
+# 關閉瀏覽器和服務，確保資源釋放
+cleanup()
