@@ -8,6 +8,8 @@ import time
 from datetime import datetime
 import os
 import atexit
+import signal
+import psutil
 
 # 設定 Selenium 的 Chrome 驅動
 chrome_options = Options()
@@ -25,8 +27,18 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 
 # 確保在腳本結束時釋放資源
 def cleanup():
-    driver.quit()
-    service.stop()
+    try:
+        driver.quit()
+    except Exception as e:
+        print(f"Error quitting driver: {e}")
+    try:
+        service.stop()
+    except Exception as e:
+        print(f"Error stopping service: {e}")
+    # 顯式關閉所有 chrome.exe 進程
+    for proc in psutil.process_iter(['pid', 'name']):
+        if proc.info['name'] == 'chrome.exe':
+            proc.kill()
 
 # 使用 atexit 模組來註冊 cleanup 函數，確保即使腳本異常退出時也能釋放資源
 atexit.register(cleanup)
